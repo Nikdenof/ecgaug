@@ -2,18 +2,20 @@ import matplotlib.pyplot as plt
 import neurokit2 as nk
 import numpy as np
 import pandas as pd
-from dataclasses import dataclass
 
 
-@dataclass
 class AddNoise:
-    mu = 0
-    sigma = 0.01
+    def __init__(self, mu: float = 0.0, sigma: float = 0.01, p: float = 0.5):
+        self.mu = mu
+        self.sigma = sigma
+        self.p = p
 
     def __call__(self, signal):
-        noise = np.random.normal(self.mu, self.sigma, signal.shape)
-        augmented_signal = signal + noise
-        return augmented_signal
+        if np.random.random() < self.p:
+            noise = np.random.normal(self.mu, self.sigma, signal.shape)
+            signal = signal.copy() + noise
+
+        return signal
 
 
 def main():
@@ -26,12 +28,16 @@ def main():
 
     ecg = ecg12[0:5000].to_numpy()
 
-    aug = AddNoise()
+    aug = AddNoise(p=0.0)
     ecg_augmented = aug(ecg)
+    np.array_equal(ecg, ecg_augmented)
 
-    ecg[:10, 0]
-    ecg_augmented[:10, 0]
+    aug = AddNoise(p=1.0)
+    ecg_augmented = aug(ecg)
+    np.array_equal(ecg, ecg_augmented)
 
+    ecg[0, 0]
+    ecg_augmented[0, 0]
 
     print(type(ecg_augmented), ecg_augmented.shape)
     pd.DataFrame(ecg_augmented).plot(subplots=True)
